@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # STE NEOM LOGISTIC SARL · Factures
 
 Web app to make your invoices with the exact design of your original NEOM invoice:
@@ -64,3 +65,6 @@ All invoices are in the **storage** folder. Copy it to a USB key or Google Drive
 - `accounts.py`, `change_password.py`, `change_password.bat`: the login
 - `.venv/`: made by start.bat the first time (Python libraries). Delete it to reinstall them.
 - `templates/`: the pages · `storage/`: your invoices · `stamp.png`: the official stamp
+=======
+# -STE-NEOM-LOGISTIC-SARL
+>>>>>>> 3a33d67301fb1e58287079040cc49bfa34c69df9
