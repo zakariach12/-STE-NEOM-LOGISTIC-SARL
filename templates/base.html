@@ -1,0 +1,30 @@
+<!doctype html><html><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{% block title %}Factures{% endblock %} · {{ app_name }}</title>
+<style>
+ *{box-sizing:border-box}
+ body{font-family:system-ui,-apple-system,"Segoe UI",sans-serif;margin:0;background:#f3f4f7;color:#1d2330}
+ header{background:#1d2330;color:#fff;padding:12px 20px;display:flex;gap:16px;align-items:center}
+ header a{color:#fff;text-decoration:none;font-weight:600}
+ main{max-width:1400px;margin:0 auto;padding:16px}
+ .card{background:#fff;border-radius:10px;padding:16px;margin-bottom:16px;box-shadow:0 1px 3px #0001}
+ h2{font-size:15px;margin:18px 0 8px;color:#555;text-transform:uppercase;letter-spacing:.04em}
+ h2:first-child{margin-top:0}
+ table{width:100%;border-collapse:collapse} th,td{padding:6px;border-bottom:1px solid #eee;text-align:left}
+ label{display:block;font-size:13px;color:#555}
+ input,select,textarea{width:100%;padding:7px 8px;border:1px solid #cfd3db;border-radius:6px;font:inherit;margin-top:3px;background:#fff}
+ textarea{resize:vertical}
+ button,.btn{background:#2257d6;color:#fff;border:0;border-radius:6px;padding:8px 14px;cursor:pointer;text-decoration:none;display:inline-block;font:inherit;font-size:14px}
+ .btn.light,button.light{background:#e7eaf0;color:#1d2330}
+ .red{background:#c0392b!important;color:#fff!important}
+ .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+ .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+ .muted{color:#777;font-size:13px}
+ .bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+ @media(max-width:700px){.grid,.grid3{grid-template-columns:1fr}}
+</style>{% block head %}{% endblock %}</head>
+<body><header><a href="{{ url_for('index') }}">🧾 {{ app_name }} <span style="font-weight:400;opacity:.7">· Factures</span></a>
+ <a href="{{ url_for('account') }}" style="margin-left:auto;font-weight:400">Mon compte</a>
+ <form method="post" action="{{ url_for('logout') }}"><button class="light" style="padding:5px 10px">Se déconnecter</button></form></header>
+<main>{% block body %}{% endblock %}</main>
+<footer style="text-align:center;color:#888;font-size:12px;padding:16px">{{ app_name }}</footer></body></html>

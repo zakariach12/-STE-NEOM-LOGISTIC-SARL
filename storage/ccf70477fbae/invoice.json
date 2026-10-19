@@ -1,0 +1,263 @@
+{
+ "company_name": "sté NEOM LOGISTICS sarl",
+ "company_address": "",
+ "company_contact": "",
+ "company_ice": "003421506000004",
+ "client_name": "STE TIZ TRANS  Logistique",
+ "client_address": "",
+ "client_ice": "000098448000092",
+ "number": "18/2026",
+ "date": "2025-07-19",
+ "due_date": "",
+ "title": "facture",
+ "lines": [
+  {
+   "desc": "**Dechargement** : 30/07/2025\n**Trajets**                  : ***Agadir-Maroc vers Perpignan*** -\n***France***",
+   "ref": "Tracteur              : **16412A35**\nSemi-remorque : **R-9494-BBY**",
+   "qty": 1,
+   "price": 10000.0
+  }
+ ],
+ "vat_rate": 0.0,
+ "discount": 0.0,
+ "discount_type": "percent",
+ "paid": 0.0,
+ "currency": "DH",
+ "notes": "Exonérée de la TVA en vertu de l'article 92-35 du CGI",
+ "footer": "",
+ "color": "#1d4fa0",
+ "logo": null,
+ "original_edits": {},
+ "original_boxes": [
+  {
+   "page": 0,
+   "rect": [
+    64.5,
+    161.0,
+    77.72666693793403,
+    178.19466701931424
+   ],
+   "text": "**N°{number}**",
+   "size": 12.3,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    56.0,
+    177.0,
+    175.0,
+    192.0
+   ],
+   "text": "**:{date}**",
+   "size": 12.3,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    300.0,
+    220.0,
+    565.0,
+    236.5
+   ],
+   "text": "__**{client_name}**__",
+   "size": 11.7,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    300.0,
+    236.5,
+    565.0,
+    250.0
+   ],
+   "text": "**ICE: {client_ice}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    66.0,
+    291.0,
+    560.0,
+    309.0
+   ],
+   "text": "__**{subject}**__",
+   "size": 11.8,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    19.5,
+    353.0,
+    181.0,
+    398.0
+   ],
+   "text": "{refs}",
+   "size": 11.5,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    184.5,
+    353.0,
+    450.5,
+    398.0
+   ],
+   "text": "{descs}",
+   "size": 12.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    453.5,
+    353.0,
+    543.5,
+    398.0
+   ],
+   "text": "**{prices}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    454.0,
+    419.0,
+    542.5,
+    441.0
+   ],
+   "text": "**{subtotal}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    454.0,
+    448.0,
+    542.5,
+    466.0
+   ],
+   "text": "**{vat}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    454.0,
+    474.0,
+    542.5,
+    491.0
+   ],
+   "text": "**{ttc}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    150.0,
+    590.0,
+    575.0,
+    611.0
+   ],
+   "text": "**{words}**",
+   "size": 13.5,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "center",
+   "color": "#000000"
+  }
+ ],
+ "subject": "Description du service de transport international de marchandises facture",
+ "show_qty": false,
+ "ref_col": "Immatriculation",
+ "words": true,
+ "design": "original",
+ "header_img": "header.png",
+ "footer_img": "footer.png",
+ "header_cut": 0.174,
+ "footer_top": 0.885,
+ "footer_end": 0.982,
+ "stamp": true,
+ "stamp_rect": [
+  350,
+  627,
+  494,
+  742
+ ],
+ "original_name": "Fayca 1.pdf",
+ "created_at": "2026-10-18T22:31:30",
+ "scan": true,
+ "text_ok": false,
+ "page_size": [
+  595,
+  842
+ ],
+ "updated_at": "2026-10-19T20:06:45"
+}

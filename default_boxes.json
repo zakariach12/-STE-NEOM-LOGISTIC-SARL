@@ -1,0 +1,218 @@
+{
+ "page_size": [
+  595,
+  842
+ ],
+ "stamp_rect": [
+  350,
+  627,
+  494,
+  742
+ ],
+ "boxes": [
+  {
+   "page": 0,
+   "rect": [
+    64.5,
+    161.0,
+    175.0,
+    176.0
+   ],
+   "text": "**N°{number}**",
+   "size": 11.7,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    56.0,
+    177.0,
+    175.0,
+    192.0
+   ],
+   "text": "**:{date}**",
+   "size": 11.7,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    300.0,
+    220.0,
+    565.0,
+    236.5
+   ],
+   "text": "__**{client_name}**__",
+   "size": 11.7,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    300.0,
+    236.5,
+    565.0,
+    250.0
+   ],
+   "text": "**ICE: {client_ice}**",
+   "size": 10.45,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    66.0,
+    291.0,
+    560.0,
+    309.0
+   ],
+   "text": "__**{subject}**__",
+   "size": 11.8,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    19.5,
+    353.0,
+    181.0,
+    398.0
+   ],
+   "text": "{refs}",
+   "size": 11.5,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    184.5,
+    353.0,
+    450.5,
+    398.0
+   ],
+   "text": "{descs}",
+   "size": 12.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "left",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    453.5,
+    353.0,
+    543.5,
+    398.0
+   ],
+   "text": "**{prices}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    454.0,
+    419.0,
+    542.5,
+    441.0
+   ],
+   "text": "**{subtotal}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    454.0,
+    448.0,
+    542.5,
+    466.0
+   ],
+   "text": "**{vat}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    454.0,
+    474.0,
+    542.5,
+    491.0
+   ],
+   "text": "**{ttc}**",
+   "size": 11.0,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "middle",
+   "align": "center",
+   "color": "#000000"
+  },
+  {
+   "page": 0,
+   "rect": [
+    150.0,
+    590.0,
+    575.0,
+    611.0
+   ],
+   "text": "**{words}**",
+   "size": 13.5,
+   "bold": false,
+   "mode": "erase",
+   "font": "serif",
+   "valign": "top",
+   "align": "center",
+   "color": "#000000"
+  }
+ ]
+}

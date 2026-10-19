@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="card">
+ <form method="post" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="bar">
+  <b>Upload an invoice</b>
+  <input type="file" name="file" accept=".pdf,.png,.jpg,.jpeg,.webp" required style="width:auto">
+  <button>Upload and edit</button>
+ </form>
+ {% if error %}<p style="color:#c0392b">{{ error }}</p>{% endif %}
+</div>
+<div class="card">
+ <table>
+  <tr><th>Number</th><th>Date</th><th>Client</th><th>Total TTC</th><th>File</th><th></th></tr>
+  {% for i in invoices %}
+  <tr><td>{{ i.number or '-' }}</td><td>{{ i.date|frdate or '-' }}</td><td>{{ i.client_name or '-' }}</td>
+   <td>{{ i.ttc|money }} {{ i.currency }}</td><td class="muted">{{ i.original_name }}</td>
+   <td style="text-align:right;white-space:nowrap"><a class="btn" href="{{ url_for('edit', inv_id=i.id) }}">Open</a>
+    <form method="post" action="{{ url_for('delete', inv_id=i.id) }}" style="display:inline"
+          onsubmit="return confirm('Supprimer la facture {{ i.number or i.original_name }} ?')"><button class="red">Supprimer</button></form></td></tr>
+  {% else %}<tr><td colspan="6" class="muted">No invoices yet. Upload your first one above.</td></tr>{% endfor %}
+ </table>
+</div>
+{% endblock %}

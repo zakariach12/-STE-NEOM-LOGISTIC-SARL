@@ -1,0 +1,100 @@
+{% set c = d.color or '#1f4e79' %}{% set cur = ' ' ~ d.currency %}{% set br = '<br>'|safe %}
+{% if not for_pdf %}<!doctype html><html><head><meta charset="utf-8"><title>{{ d.title }} {{ d.number }}</title>
+<style>
+ body{background:#e9ebef;margin:0;padding:20px}
+ .page{background:#fff;max-width:794px;min-height:1123px;margin:0 auto;padding:30px 44px 14px;box-shadow:0 2px 10px #0002;display:flex;flex-direction:column}
+ .grow{flex:1}
+ .footimg{width:calc(100% + 88px);margin:0 -44px;display:block}
+ @page{size:A4;margin:8mm 10mm}
+ @media print{body{background:#fff;padding:0}.page{box-shadow:none;padding:0;max-width:none;min-height:calc(297mm - 17mm)}.footimg{width:100%;margin:0}}
+</style></head><body><div class="page"><div class="grow">{% endif %}
+<style>
+ .inv{font-family:Helvetica,Arial,sans-serif;font-size:10pt;color:#222;width:100%;border-collapse:collapse}
+ .inv td{vertical-align:top;padding:0}
+ .title{font-size:20pt;font-weight:bold;color:{{ c }};text-align:right}
+ .small{font-size:9pt;color:#555}
+ .box{border:1px solid #ddd;padding:8px}
+ .lbl{font-size:8pt;color:{{ c }};font-weight:bold;text-transform:uppercase}
+ .lines{width:100%;border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;font-size:10pt}
+ .lines th{background-color:{{ c }};color:#fff;padding:6px;text-align:left;font-size:9pt}
+ .lines td{padding:6px;border-bottom:1px solid #e3e3e3;vertical-align:top}
+ .r,.lines th.r{text-align:right}
+ .tot{border-collapse:collapse;font-family:Helvetica,Arial,sans-serif;font-size:10pt;width:100%}
+ .tot td{padding:4px 6px}
+ .due td{background-color:{{ c }};color:#fff;font-weight:bold;font-size:11pt}
+ .foot{font-family:Helvetica,Arial,sans-serif;font-size:8pt;color:#666;text-align:center;border-top:2px solid {{ c }};padding-top:6px}
+ .subj{font-family:Helvetica,Arial,sans-serif;font-size:10pt;font-weight:bold;text-decoration:underline}
+ .words{font-family:Helvetica,Arial,sans-serif;font-size:10pt;text-align:center}
+</style>
+{% if header %}
+<img src="{{ header }}" style="width:100%" width="523"><br>
+<table class="inv"><tr>
+ <td style="width:50%">
+  <span>{{ d.title|capitalize }} : <b>N° {{ d.number }}</b><br>
+  Date : <b>{{ d.date|frdate }}</b>
+  {% if d.due_date %}<br>Échéance : {{ d.due_date|frdate }}{% endif %}</span>
+ </td>
+ <td style="width:50%" class="r">
+  <b><u>{{ d.client_name }}</u></b>
+  {% if d.client_address %}<br><span class="small">{{ d.client_address|replace('\n', br) }}</span>{% endif %}
+  {% if d.client_ice %}<br><b>ICE: {{ d.client_ice }}</b>{% endif %}
+ </td>
+</tr></table>
+{% else %}
+<table class="inv"><tr>
+ <td style="width:55%">
+  {% if logo %}<img src="{{ logo }}" style="max-height:70px;max-width:220px" height="70"><br>{% endif %}
+  <b style="font-size:12pt">{{ d.company_name }}</b><br>
+  <span class="small">{{ d.company_address|replace('\n', br) }}
+  {% if d.company_contact %}<br>{{ d.company_contact|replace('\n', br) }}{% endif %}
+  {% if d.company_ice %}<br>ICE : {{ d.company_ice }}{% endif %}</span>
+ </td>
+ <td style="width:45%" class="r">
+  <div class="title">{{ d.title }}</div>
+  <span class="small">N° : <b>{{ d.number }}</b><br>
+  Date : {{ d.date|frdate }}
+  {% if d.due_date %}<br>Échéance : {{ d.due_date|frdate }}{% endif %}</span>
+ </td>
+</tr></table>
+<br>
+<table class="inv"><tr><td style="width:50%"></td><td style="width:50%" class="box">
+ <span class="lbl">Client</span><br>
+ <b>{{ d.client_name }}</b><br>
+ <span class="small">{{ d.client_address|replace('\n', br) }}
+ {% if d.client_ice %}<br>ICE : {{ d.client_ice }}{% endif %}</span>
+</td></tr></table>
+{% endif %}
+<br>
+{% if d.subject %}<p class="subj">Intitulé : {{ d.subject }}</p>{% endif %}
+<table class="lines">
+ <tr>{% if d.ref_col %}<th width="27%">{{ d.ref_col }}</th>{% endif %}
+  <th>Désignation</th>
+  {% if d.show_qty %}<th class="r" width="9%">Qté</th><th class="r" width="16%">P.U. HT</th>{% endif %}
+  <th class="r" width="18%">{{ 'Montant HT' if d.show_qty else 'Prix HT' }}</th></tr>
+ {% for l in t.lines_calc %}
+ <tr>{% if d.ref_col %}<td>{{ l.ref|rich }}</td>{% endif %}
+  <td>{{ l.desc|rich }}</td>
+  {% if d.show_qty %}<td class="r">{{ '%g'|format(l.qty) }}</td><td class="r">{{ l.price|money }}</td>{% endif %}
+  <td class="r">{{ l.amount|money }}</td></tr>
+ {% endfor %}
+</table>
+<br>
+<table class="inv"><tr><td style="width:50%">
+ {% if d.notes %}<span class="lbl">Notes</span><br><span class="small">{{ d.notes|replace('\n', br) }}</span>{% endif %}
+</td><td style="width:50%">
+ <table class="tot">
+  <tr><td>Total HT</td><td class="r">{{ t.subtotal|money }}{{ cur }}</td></tr>
+  {% if t.discount_amount %}<tr><td>Remise{% if d.discount_type == 'percent' %} ({{ '%g'|format(d.discount) }} %){% endif %}</td><td class="r">- {{ t.discount_amount|money }}{{ cur }}</td></tr>
+  <tr><td>Net HT</td><td class="r">{{ t.net|money }}{{ cur }}</td></tr>{% endif %}
+  <tr><td>TVA ({{ '%g'|format(d.vat_rate) }} %)</td><td class="r">{{ t.vat|money }}{{ cur }}</td></tr>
+  <tr><td><b>Total TTC</b></td><td class="r"><b>{{ t.ttc|money }}{{ cur }}</b></td></tr>
+  {% if d.paid %}<tr><td>Déjà payé</td><td class="r">- {{ d.paid|money }}{{ cur }}</td></tr>{% endif %}
+  <tr class="due"><td>Net à payer</td><td class="r">{{ t.due|money }}{{ cur }}</td></tr>
+ </table>
+</td></tr></table>
+{% if d.words %}<br><p class="words"><u>Arrêtée la présente facture à la somme de :</u><br><b>{{ t.words }}</b></p>{% endif %}
+{% if stamp %}<table class="inv"><tr><td style="width:60%"></td><td style="width:40%" class="r"><img src="{{ stamp }}" width="150" style="width:150px"></td></tr></table>{% endif %}
+{% if not for_pdf %}</div>{% else %}<br><br>{% endif %}
+{% if footer %}<img class="footimg" src="{{ footer }}">
+{% elif d.footer and not (for_pdf and d.design == 'scan' and d.footer_img) %}<div class="foot">{{ d.footer|replace('\n', br) }}</div>{% endif %}
+{% if not for_pdf %}</div>{% if auto_print %}<script>window.onload = () => window.print()</script>{% endif %}</body></html>{% endif %}

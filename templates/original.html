@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+{% block title %}Edit on original{% endblock %}
+{% block head %}<style>
+ .pg{position:relative;margin:0 auto 20px;box-shadow:0 2px 10px #0002;background:#fff}
+ .pg img{width:100%;display:block;user-select:none;-webkit-user-drag:none}
+ .adding .pg{cursor:crosshair}
+ .sp{position:absolute;border:1px dashed transparent;background:transparent;color:transparent;padding:0;margin:0;
+     border-radius:2px;font-family:Helvetica,Arial,sans-serif;line-height:1;outline:none;cursor:text;white-space:nowrap}
+ .sp:hover{border-color:#2257d6aa;background:#2257d611}
+ .sp:focus,.sp.changed{background:#fff;color:var(--c,#000);border-color:#2257d6;z-index:2}
+ .sp.changed{border-style:solid}
+ .bx{position:absolute;font-family:Helvetica,Arial,sans-serif;line-height:1.18;padding:0;margin:0;border:1px dashed #2257d6;
+     background:transparent;resize:both;overflow:hidden;outline:none;z-index:3;min-width:20px;min-height:10px}
+ .bx.erase,.bx.cover{background:#ffffffdd}
+ .bx.serif{font-family:"Times New Roman",Times,serif}
+ .bx.active{border-style:solid;box-shadow:0 0 0 2px #2257d633}
+ #tools{position:absolute;z-index:5;display:none;background:#1d2330;border-radius:6px;padding:3px;gap:2px;white-space:nowrap}
+ #tools button,#tools input,#tools select{background:transparent;color:#fff;padding:3px 7px;font-size:13px;border:0;margin:0;width:auto}
+ #tools select{max-width:96px}
+ #tools select option{color:#000}
+ #tools button.on{background:#2257d6}
+ #tools .drag{cursor:move}
+</style>{% endblock %}
+{% block body %}
+<div class="card bar">
+ <a class="btn light" href="{{ url_for('edit', inv_id=inv_id) }}">← Back</a>
+ <a class="btn" href="{{ url_for('original_pdf', inv_id=inv_id) }}">⬇ Download edited original PDF</a>
+ <button id="addBtn" class="light" onclick="toggleAdd()">＋ Add text box</button>
+ <a class="btn light" href="{{ url_for('pdf', inv_id=inv_id, inline=1) }}" target="_blank">Preview PDF</a>
+ <span class="muted">{% if spans %}Click any text to change it, or add{% else %}Add{% endif %} a box on each value and pick its field (like {number}).
+ "Erase" removes the old text under the box and keeps the background. Use **bold**, *italic*, __underline__.</span>
+ <span id="saved" style="font-size:13px;color:#2a8a4a"></span>
+ <form method="post" action="{{ url_for('original_default', inv_id=inv_id) }}" style="margin-left:auto" onsubmit="return confirm('Remettre les champs à leur place d\'origine (modèle NEOM) ?')"><button class="light">Positions par défaut</button></form>
+ <button class="light" onclick="resetAll()">Undo all changes</button>
+</div>
+<div id="pages"></div>
+<div id="tools">
+ <button class="drag" title="Drag to move">✥</button>
+ <button onclick="act('size',-1)" title="Smaller">A−</button><button onclick="act('size',1)" title="Bigger">A+</button>
+ <button id="tb_bold" onclick="act('bold')"><b>B</b></button>
+ <button id="tb_left" onclick="act('align','left')">⯇</button><button id="tb_center" onclick="act('align','center')">≡</button><button id="tb_right" onclick="act('align','right')">⯈</button>
+ <button id="tb_mode" onclick="act('mode')" title="What happens to the old text under the box"></button>
+ <button id="tb_font" onclick="act('font')" title="Font"></button>
+ <button id="tb_valign" onclick="act('valign')" title="Vertical position in the box"></button>
+ <select id="tb_field" onchange="act('field', this.value); this.value=''"><option value="">+ Field</option>
+  {% for f in fields %}<option value="{{ f }}">{{ f }} ({{ values[f]|truncate(18, True, '…') }})</option>{% endfor %}</select>
+ <input id="tb_color" type="color" oninput="act('color', this.value)" style="width:30px;height:24px;padding:0">
+ <button onclick="act('delete')" title="Delete box">🗑</button>
+</div>
+<script>
+const pages = {{ pages|tojson }}, spans = {{ spans|tojson }}, edits = {{ d.original_edits|tojson }};
+const values = {{ values|tojson }};
+const fill = t => (t || '').replace(/\{(\w+)\}/g, (m, k) => k in values ? values[k] : m);
+let boxes = {{ d.original_boxes|tojson }};
+const W = Math.min(900, window.innerWidth - 40);
+const root = document.getElementById('pages'), tools = document.getElementById('tools');
+const pageDivs = pages.map((p, n) => {
+  const div = document.createElement('div');
+  div.className = 'pg'; div.style.width = W + 'px';
+  div.innerHTML = `<img src="{{ url_for('files', inv_id=inv_id, name='') }}${p.image}" draggable="false">`;
+  div.onclick = e => { if (adding && e.target.tagName === 'IMG') placeBox(n, e); };
+  root.appendChild(div); return div;
+});
+const K = n => W / pages[n].w;
+const toHex = c => '#' + c.toString(16).padStart(6, '0');
+
+// ----- existing text (real PDFs) -----
+spans.forEach(s => {
+  const k = K(s.page), [x0, y0, x1, y1] = s.bbox;
+  const el = document.createElement('input');
+  el.className = 'sp'; el.dataset.id = s.id;
+  el.value = edits[s.id] ?? s.text;
+  Object.assign(el.style, {left: (x0 - 1) * k + 'px', top: (y0 - 1) * k + 'px',
+    width: Math.max(x1 - x0 + 4, 20) * k + 'px', height: (y1 - y0 + 2) * k + 'px',
+    fontSize: s.size * k + 'px', fontWeight: s.bold ? 'bold' : 'normal'});
+  el.style.setProperty('--c', toHex(s.color));
+  const mark = () => el.classList.toggle('changed', el.value !== s.text);
+  el.oninput = () => { mark(); el.style.width = Math.max(parseFloat(el.style.width), (el.value.length * s.size * 0.55 + 4) * k) + 'px'; save(); };
+  mark(); pageDivs[s.page].appendChild(el);
+});
+
+// ----- new text boxes -----
+let adding = false, active = null;
+function toggleAdd() { adding = !adding; document.body.classList.toggle('adding', adding); addBtn.classList.toggle('on', adding);
+  addBtn.textContent = adding ? 'Click on the invoice…' : '＋ Add text box'; }
+function placeBox(n, e) {
+  const r = pageDivs[n].getBoundingClientRect(), k = K(n);
+  const x = (e.clientX - r.left) / k, y = (e.clientY - r.top) / k;
+  const b = {page: n, rect: [x, y - 7, x + 150, y + 9], text: '', size: 11, bold: false, mode: 'erase', font: 'serif',
+             valign: 'top', align: 'left', color: '#000000'};
+  boxes.push(b); const el = drawBox(b); toggleAdd(); el.focus(); save();
+}
+function drawBox(b) {
+  const k = K(b.page), el = document.createElement('textarea');
+  el.className = 'bx'; el.value = b.text; el._b = b;
+  pageDivs[b.page].appendChild(el); style(el);
+  el.oninput = () => { b.text = el.value; el.title = 'Will show: ' + fill(b.text); save(); };
+  el.onfocus = () => select(el);
+  new ResizeObserver(() => {  // keep the stored rect in sync when the box is resized
+    const [x, y] = b.rect, w = el.offsetWidth / k, h = el.offsetHeight / k;
+    if (Math.abs(b.rect[2] - x - w) > 0.5 || Math.abs(b.rect[3] - y - h) > 0.5) { b.rect = [x, y, x + w, y + h]; save(); place(); }
+  }).observe(el);
+  return el;
+}
+function style(el) {
+  const b = el._b, k = K(b.page), [x0, y0, x1, y1] = b.rect;
+  Object.assign(el.style, {left: x0 * k + 'px', top: y0 * k + 'px', width: (x1 - x0) * k + 'px', height: (y1 - y0) * k + 'px',
+    fontSize: b.size * k + 'px', fontWeight: b.bold ? 'bold' : 'normal', textAlign: b.align, color: b.color});
+  b.mode = b.mode || (b.cover ? 'cover' : 'none');
+  ['erase', 'cover'].forEach(m => el.classList.toggle(m, b.mode === m));
+  el.classList.toggle('serif', b.font === 'serif');
+  el.title = 'Will show: ' + fill(b.text);
+}
+function select(el) {
+  if (active && active !== el) active.classList.remove('active');
+  active = el; el.classList.add('active'); place();
+}
+function place() {
+  if (!active) { tools.style.display = 'none'; return; }
+  const r = active.getBoundingClientRect(), b = active._b;
+  Object.assign(tools.style, {display: 'flex', left: r.left + scrollX + 'px', top: r.top + scrollY - 34 + 'px'});
+  tb_bold.classList.toggle('on', b.bold); tb_color.value = b.color;
+  tb_mode.textContent = {erase: 'Erase', cover: 'White', none: 'No hide'}[b.mode];
+  tb_font.textContent = b.font === 'serif' ? 'Times' : 'Arial';
+  tb_valign.textContent = b.valign === 'middle' ? '↕ Middle' : '↑ Top';
+  ['left', 'center', 'right'].forEach(a => document.getElementById('tb_' + a).classList.toggle('on', b.align === a));
+}
+function act(what, v) {
+  if (!active) return;
+  const b = active._b;
+  if (what === 'size') b.size = Math.max(5, b.size + v);
+  if (what === 'bold') b.bold = !b.bold;
+  if (what === 'align') b.align = v;
+  if (what === 'mode') b.mode = {erase: 'cover', cover: 'none', none: 'erase'}[b.mode];
+  if (what === 'font') b.font = b.font === 'serif' ? 'sans' : 'serif';
+  if (what === 'valign') b.valign = b.valign === 'middle' ? 'top' : 'middle';
+  if (what === 'field' && v) {
+    const el = active, pos = el.selectionStart ?? el.value.length;
+    el.value = el.value.slice(0, pos) + '{' + v + '}' + el.value.slice(el.selectionEnd ?? pos); b.text = el.value;
+  }
+  if (what === 'color') b.color = v;
+  if (what === 'delete') { boxes = boxes.filter(x => x !== b); active.remove(); active = null; place(); save(); return; }
+  style(active); place(); save(); active.focus();
+}
+document.addEventListener('mousedown', e => {
+  if (!e.target.closest('#tools') && !e.target.classList.contains('bx') && active) { active.classList.remove('active'); active = null; place(); }
+});
+// drag with the ✥ handle
+tools.querySelector('.drag').onmousedown = e => {
+  e.preventDefault();
+  const el = active, b = el._b, k = K(b.page), sx = e.clientX, sy = e.clientY, start = [...b.rect];
+  const move = ev => {
+    const dx = (ev.clientX - sx) / k, dy = (ev.clientY - sy) / k;
+    b.rect = [start[0] + dx, start[1] + dy, start[2] + dx, start[3] + dy]; style(el); place();
+  };
+  const up = () => { removeEventListener('mousemove', move); removeEventListener('mouseup', up); save(); };
+  addEventListener('mousemove', move); addEventListener('mouseup', up);
+};
+boxes.forEach(drawBox);
+
+// ----- saving -----
+let timer;
+function save() {
+  saved.textContent = 'Saving...';
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    const out = {};
+    document.querySelectorAll('.sp').forEach(el => { if (el.classList.contains('changed')) out[el.dataset.id] = el.value; });
+    const r = await fetch('', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({edits: out, boxes})});
+    const j = await r.json();
+    saved.textContent = r.ok ? `Saved ✓ (${j.changed} changes)` : 'Not saved, try again';
+  }, 500);
+}
+function resetAll() {
+  if (!confirm('Undo all changes on the original?')) return;
+  document.querySelectorAll('.sp').forEach(el => { el.value = spans[el.dataset.id].text; el.classList.remove('changed'); });
+  document.querySelectorAll('.bx').forEach(el => el.remove()); boxes = []; active = null; place();
+  save();
+}
+</script>
+{% endblock %}

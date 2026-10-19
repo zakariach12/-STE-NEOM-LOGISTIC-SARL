@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+{% block title %}Invoice {{ d.number }}{% endblock %}
+{% block head %}<style>
+ .layout{display:grid;grid-template-columns:minmax(380px,1fr) 1.15fr;gap:16px;align-items:start}
+ .preview{position:sticky;top:12px} iframe{width:100%;height:calc(100vh - 150px);border:1px solid #ddd;border-radius:8px;background:#fff}
+ #lines td{padding:3px;border:0} #lines input{margin:0} .amt{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+ .totals td{border:0;padding:3px 6px} .totals td:last-child{text-align:right;font-variant-numeric:tabular-nums}
+ .due td{font-weight:700;font-size:17px;border-top:2px solid #ddd}
+ #saved{font-size:13px;color:#2a8a4a}
+ .note{background:#fff8e1;border:1px solid #f1d98a;padding:10px;border-radius:8px;font-size:14px;margin-bottom:12px}
+ @media(max-width:1000px){.layout{grid-template-columns:1fr}.preview{position:static}}
+</style>{% endblock %}
+{% block body %}
+<div class="bar card">
+ <a class="btn" href="{{ url_for('pdf', inv_id=inv_id) }}">⬇ Download PDF</a>
+ <a class="btn light" href="{{ url_for('view', inv_id=inv_id, print=1) }}" target="_blank">🖨 Print</a>
+ <a class="btn light" href="{{ url_for('original', inv_id=inv_id) }}">✏️ {{ 'Place fields on original' if d.design == 'original' else 'Edit on original PDF' }}</a>
+ <a class="btn light" href="{{ url_for('files', inv_id=inv_id, name='original.pdf') }}" target="_blank">See original</a>
+ <form method="post" action="{{ url_for('duplicate', inv_id=inv_id) }}" style="display:inline"><button class="light">Copy as new invoice</button></form>
+ <span id="saved"></span>
+ <form method="post" action="{{ url_for('delete', inv_id=inv_id) }}" onsubmit="return confirm('Delete this invoice?')" style="margin-left:auto"><button class="red">Delete</button></form>
+</div>
+
+<div class="layout">
+<div class="card">
+ {% if d.design == 'original' and not d.original_boxes %}<div class="note">Your PDF keeps its exact design. First, show where each value goes: open <a href="{{ url_for('original', inv_id=inv_id) }}">Edit on original PDF</a> and add a box on each value (number, date, client...) with the right field. You do this once: next invoices reuse the boxes.</div>
+ {% elif new and d.design == 'original' %}<div class="note">Same design as your original. Type the new values here; they go in the same places on your invoice. Check the preview on the right.</div>
+ {% elif new %}<div class="note">We filled some fields from your PDF. Please check them. Everything saves automatically.</div>{% endif %}
+ <form id="f" onsubmit="return false">
+  <h2>Your company</h2>
+  <div class="grid">
+   <label>Company name<input name="company_name"></label>
+   <label>ICE<input name="company_ice"></label>
+   <label>Address<textarea name="company_address" rows="2"></textarea></label>
+   <label>Phone / email / IF / RC<textarea name="company_contact" rows="2"></textarea></label>
+  </div>
+  <h2>Client</h2>
+  <div class="grid">
+   <label>Client name<input name="client_name"></label>
+   <label>Client ICE<input name="client_ice"></label>
+   <label style="grid-column:1/-1">Client address<textarea name="client_address" rows="2"></textarea></label>
+  </div>
+  <h2>Invoice</h2>
+  <div class="grid3">
+   <label>Title<input name="title"></label>
+   <label>Invoice number<input name="number"></label>
+   <label>Currency<input name="currency"></label>
+   <label>Date<input type="date" name="date"></label>
+   <label>Due date<input type="date" name="due_date"></label>
+  </div>
+  <label style="margin-top:10px">Subject (Intitulé)<input name="subject" placeholder="Description du service..."></label>
+  <h2>Lines</h2>
+  <div class="bar" style="margin-bottom:8px">
+   <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="show_qty" style="width:auto;margin:0"> Quantity column</label>
+   <label style="flex:1">Extra column title (empty = no column)<input name="ref_col" placeholder="e.g. Immatriculation"></label>
+  </div>
+  <table id="lines"><tr class="muted"><td class="ref">Extra</td><td>Description</td><td class="qty" style="width:70px">Qty</td><td style="width:100px" id="price_h">Unit price HT</td><td style="width:90px" class="amt">Amount</td><td style="width:34px"></td></tr></table>
+  <button type="button" class="light" onclick="addLine();changed()" style="margin-top:6px">+ Add line</button>
+  <p class="muted" style="margin:6px 0 0">Tip: **text** = bold, *text* = italic, __text__ = underline.</p>
+
+  <h2>Totals</h2>
+  <div class="grid3">
+   <label>VAT (TVA) %<input name="vat_rate" inputmode="decimal"></label>
+   <label>Discount<input name="discount" inputmode="decimal"></label>
+   <label>Discount type<select name="discount_type"><option value="percent">%</option><option value="amount">Amount</option></select></label>
+   <label>Already paid<input name="paid" inputmode="decimal"></label>
+  </div>
+  <table class="totals" style="margin-top:10px">
+   <tr><td>Total HT</td><td id="t_subtotal"></td></tr>
+   <tr><td>Discount</td><td id="t_discount"></td></tr>
+   <tr><td>Net HT</td><td id="t_net"></td></tr>
+   <tr><td>TVA</td><td id="t_vat"></td></tr>
+   <tr><td>Total TTC</td><td id="t_ttc"></td></tr>
+   <tr class="due"><td>Amount due</td><td id="t_due"></td></tr>
+  </table>
+  <label style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" name="words" style="width:auto;margin:0"> Write the total in words: <i id="t_words" class="muted">{{ t.words }}</i></label>
+
+  <h2>Cachet et signature</h2>
+  <label style="display:flex;gap:6px;align-items:center"><input type="checkbox" name="stamp" style="width:auto;margin:0"> Put the official stamp and signature on the invoice
+   <img src="{{ url_for('stamp_image') }}" style="height:40px;margin-left:8px" alt=""></label>
+  <h2>Notes and footer</h2>
+  <label>Notes (payment terms, bank, RIB...)<textarea name="notes" rows="3"></textarea></label><br>
+  <label>Footer<textarea name="footer" rows="3"></textarea></label>
+  <h2>Design</h2>
+  <div class="grid">
+   <label>Main colour<input type="color" name="color" style="height:38px;padding:2px"></label>
+  </div>
+ </form>
+ <form method="post" action="{{ url_for('design', inv_id=inv_id) }}" style="margin-top:10px">
+  <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="design" value="original" style="width:auto;margin:0" {{ 'checked' if d.design=='original' }} onchange="this.form.submit()"> <b>Exact design of my original invoice</b> (recommended)</label>
+  <label style="display:flex;gap:6px;align-items:center"><input type="radio" name="design" value="simple" style="width:auto;margin:0" {{ 'checked' if d.design=='simple' }} onchange="this.form.submit()"> Simple design (logo + colour)</label>
+  {% if d.scan %}<label style="display:flex;gap:6px;align-items:center"><input type="radio" name="design" value="scan" style="width:auto;margin:0" {{ 'checked' if d.design=='scan' }} onchange="this.form.submit()"> Rebuilt invoice with my header and footer</label>{% endif %}
+  {% if d.design == 'scan' %}
+  <div class="grid3" style="margin-top:8px">
+   <label>Header ends at (% of page)<input name="header_cut" value="{{ '%g'|format(d.header_cut*100) }}"></label>
+   <label>Footer starts at (%)<input name="footer_top" value="{{ '%g'|format(d.footer_top*100) }}"></label>
+   <label>Footer ends at (%)<input name="footer_end" value="{{ '%g'|format(d.footer_end*100) }}"></label>
+  </div>
+  <button class="light" style="margin-top:6px">Update header and footer</button>
+  {% endif %}
+ </form>
+ {% if d.design == 'simple' %}<form method="post" action="{{ url_for('upload_logo', inv_id=inv_id) }}" enctype="multipart/form-data" class="bar" style="margin-top:10px">
+  <label style="flex:1">Logo {% if d.logo %}<img src="{{ url_for('files', inv_id=inv_id, name=d.logo) }}" style="height:28px;vertical-align:middle;margin-left:6px">{% else %}<span class="muted">(none found)</span>{% endif %}
+   <input type="file" name="logo" accept="image/*" onchange="this.form.submit()"></label>
+  {% if d.logo %}<button name="remove" value="1" class="light">Remove logo</button>{% endif %}
+ </form>{% endif %}
+</div>
+<div class="preview"><iframe id="pv" src="{{ url_for('view', inv_id=inv_id) }}"></iframe></div>
+</div>
+
+<script>
+const data = {{ d|tojson }};
+const form = document.getElementById('f');
+const num = v => parseFloat(String(v ?? '').replace(/\s/g,'').replace(',', '.')) || 0;
+const fmt = v => v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+
+for (const el of form.elements) if (el.name && el.name in data) {
+  if (el.type === 'checkbox') el.checked = !!data[el.name]; else el.value = data[el.name] ?? '';
+}
+
+function addLine(l = {desc:'', ref:'', qty:1, price:0}) {
+  const tr = document.createElement('tr');
+  tr.className = 'line';
+  tr.innerHTML = `<td class="ref"><textarea class="r" rows="3"></textarea></td><td><textarea class="d" rows="3"></textarea></td><td class="qty"><input class="q" inputmode="decimal"></td>
+    <td><input class="p" inputmode="decimal"></td><td class="amt a"></td>
+    <td><button type="button" class="light" title="Delete line" onclick="this.closest('tr').remove();changed()">✕</button></td>`;
+  tr.querySelector('.d').value = l.desc; tr.querySelector('.r').value = l.ref || '';
+  tr.querySelector('.q').value = l.qty; tr.querySelector('.p').value = l.price;
+  document.getElementById('lines').appendChild(tr);
+}
+(data.lines.length ? data.lines : [undefined]).forEach(addLine);
+
+function collect() {
+  const out = {};
+  for (const el of form.elements) if (el.name) out[el.name] = el.type === 'checkbox' ? el.checked : el.value;
+  out.lines = [...document.querySelectorAll('#lines tr.line')].map(tr => ({
+    desc: tr.querySelector('.d').value, ref: tr.querySelector('.r').value,
+    qty: out.show_qty ? tr.querySelector('.q').value : 1, price: tr.querySelector('.p').value}));
+  return out;
+}
+function columns() {
+  const d = collect();
+  document.querySelectorAll('#lines .qty').forEach(e => e.style.display = d.show_qty ? '' : 'none');
+  document.querySelectorAll('#lines .ref').forEach(e => e.style.display = d.ref_col.trim() ? '' : 'none');
+  document.querySelector('#lines tr .ref').textContent = d.ref_col;
+  price_h.textContent = d.show_qty ? 'Unit price HT' : 'Price HT';
+}
+function calc() {  // live totals; the server does the same maths for the PDF
+  columns();
+  const d = collect();
+  let sub = 0;
+  document.querySelectorAll('#lines tr.line').forEach(tr => {
+    const a = (d.show_qty ? num(tr.querySelector('.q').value) : 1) * num(tr.querySelector('.p').value);
+    tr.querySelector('.a').textContent = fmt(a); sub += a;
+  });
+  const disc = Math.min(d.discount_type === 'percent' ? sub * num(d.discount) / 100 : num(d.discount), sub);
+  const net = sub - disc, vat = net * num(d.vat_rate) / 100, ttc = net + vat;
+  const c = ' ' + d.currency;
+  t_subtotal.textContent = fmt(sub) + c; t_discount.textContent = '- ' + fmt(disc) + c;
+  t_net.textContent = fmt(net) + c; t_vat.textContent = fmt(vat) + c;
+  t_ttc.textContent = fmt(ttc) + c; t_due.textContent = fmt(ttc - num(d.paid)) + c;
+}
+let timer;
+function changed() {
+  calc();
+  document.getElementById('saved').textContent = 'Saving...';
+  clearTimeout(timer);
+  timer = setTimeout(async () => {
+    const r = await fetch('{{ url_for("save_fields", inv_id=inv_id) }}', {method:'POST',
+      headers:{'Content-Type':'application/json'}, body: JSON.stringify(collect())});
+    document.getElementById('saved').textContent = r.ok ? 'Saved ✓' : 'Not saved, try again';
+    if (r.ok) t_words.textContent = (await r.json()).words;
+    const pv = document.getElementById('pv'), y = pv.contentWindow.scrollY;
+    pv.onload = () => pv.contentWindow.scrollTo(0, y);
+    pv.contentWindow.location.reload();
+  }, 600);
+}
+document.addEventListener('input', e => { if (e.target.closest('#f')) changed(); });
+document.addEventListener('change', e => { if (e.target.closest('#f')) changed(); });
+calc();
+</script>
+{% endblock %}

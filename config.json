@@ -1,0 +1,5 @@
+{
+ "email": "zakariaonline6@gmail.com",
+ "password_hash": "scrypt:32768:8:1$TxhUWacer2H6rsF2$20223df9afd4f036c8c7fd8b1a260118462610a1914210894208fb268879ad7796f30da6244bb436f23cddf09e593bffc2468d5861cc1da7c437817e82d03f59",
+ "secret_key": "4cd46f73c92b0d3e5f8dc7554fecf59f3e0673f5118e2b52f085efb367a012e6"
+}
